@@ -1,4 +1,4 @@
-"""Differentiable forward kinematics of the G1 in torch, built from the compiled MJCF.
+"""Differentiable forward kinematics of the robot in torch, built from the compiled MJCF.
 
 The same FK computes tracked-body poses and velocities for the reference motion, for logged
 simulator states, and for world-model predictions, so the analytic reward head matches the
@@ -11,15 +11,15 @@ import mujoco
 import numpy as np
 import torch
 
-from .robot import G1_JOINT_NAMES, MJCF_PATH, TRACKED_BODIES
+from .robot import JOINT_NAMES, MJCF_PATH, TRACKED_BODIES
 from .rotations import axis_angle_to_mat, quat_to_mat
 
 
-class G1Kinematics:
+class RobotKinematics:
     def __init__(self, device: str, tracked: list[str] = TRACKED_BODIES):
         m = mujoco.MjModel.from_xml_path(MJCF_PATH)
         self.device = device
-        jname_to_idx = {n: i for i, n in enumerate(G1_JOINT_NAMES)}
+        jname_to_idx = {n: i for i, n in enumerate(JOINT_NAMES)}
         # moving bodies in tree order (mujoco orders parents before children)
         bodies, parent, joint_idx, axes, offs_p, offs_R = [], [], [], [], [], []
         mj_to_local = {}
@@ -50,8 +50,8 @@ class G1Kinematics:
         self.off_R = quat_to_mat(torch.tensor(np.array(offs_R), dtype=torch.float32, device=device))
         self.tracked_idx = [bodies.index(n) for n in tracked]
         self.num_bodies = len(bodies)
-        # joint limits (in G1_JOINT_NAMES order)
-        lo, hi = np.zeros(29), np.zeros(29)
+        # joint limits (in JOINT_NAMES order)
+        lo, hi = np.zeros(len(JOINT_NAMES)), np.zeros(len(JOINT_NAMES))
         for j in range(m.njnt):
             n = m.joint(j).name
             if n in jname_to_idx:
@@ -64,7 +64,7 @@ class G1Kinematics:
 
         Args:
             p, R, v, w: root (pelvis) position (B,3), rotation (B,3,3), world lin/ang velocity (B,3).
-            q, qd: joint positions/velocities (B,29) in G1_JOINT_NAMES order.
+            q, qd: joint positions/velocities (B,NUM_J) in JOINT_NAMES order.
         """
         P, Rs, V, W = [None] * self.num_bodies, [None] * self.num_bodies, [None] * self.num_bodies, [None] * self.num_bodies
         for i in range(self.num_bodies):
@@ -88,3 +88,6 @@ class G1Kinematics:
             torch.stack([V[i] for i in idx], -2),
             torch.stack([W[i] for i in idx], -2),
         )
+
+
+G1Kinematics = RobotKinematics  # backwards-compatible name

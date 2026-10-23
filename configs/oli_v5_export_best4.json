@@ -1,0 +1,26 @@
+[
+  {
+    "name": "walk1_subject1",
+    "historical_norm_return": 0.8638,
+    "start_frame_50hz": 130,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk4_subject1",
+    "historical_norm_return": 0.8575,
+    "start_frame_50hz": 151,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk1_subject2",
+    "historical_norm_return": 0.8398,
+    "start_frame_50hz": 130,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk2_subject4",
+    "historical_norm_return": 0.8345,
+    "start_frame_50hz": 157,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  }
+]

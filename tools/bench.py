@@ -2,24 +2,24 @@
 import os, sys, time
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import torch
-from supermimic.kinematics import G1Kinematics
+from supermimic.kinematics import RobotKinematics
 from supermimic.motion import MotionLib
-from supermimic.mdp import MDP, flatten_state, unflatten_state, normalize_xi, OBS_DIM
+from supermimic.mdp import XI_DIM, MDP, flatten_state, unflatten_state, normalize_xi, OBS_DIM
 from supermimic.networks import WorldModel
-from supermimic.robot import default_joint_pos_list
+from supermimic.robot import MOTION_DIR, NUM_J, default_joint_pos_list
 torch.backends.cuda.matmul.allow_tf32 = True
 dev = "cuda:0"
-kin = G1Kinematics(dev)
-motion = MotionLib.from_dir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "lafan1_g1"), kin, dev)
+kin = RobotKinematics(dev)
+motion = MotionLib.from_dir(MOTION_DIR, kin, dev)
 mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
 wm = WorldModel().to(dev)
 B = 2048
 f = torch.randint(0, motion.num_frames - 20, (B * 8,), device=dev)
 S = motion.ref_state(f); S1 = motion.ref_state(f + 1)
-a = torch.randn(B * 8, 29, device=dev); xi = torch.zeros(B * 8, 33, device=dev); xi[:, 0] = 0.75
+a = torch.randn(B * 8, NUM_J, device=dev); xi = torch.zeros(B * 8, XI_DIM, device=dev); xi[:, 0] = 0.75
 wm.in_norm.update(wm.inputs(S, a, normalize_xi(xi))); wm.out_norm.update(wm.targets(S, S1))
 std = wm.out_norm.std()
-names = ["dp"] * 3 + ["dth"] * 3 + ["dv"] * 3 + ["dw"] * 3 + ["dq"] * 29 + ["dqd"] * 29
+names = ["dp"] * 3 + ["dth"] * 3 + ["dv"] * 3 + ["dw"] * 3 + ["dq"] * NUM_J + ["dqd"] * NUM_J
 print("out std per group:", {n: f"{std[[i for i, m in enumerate(names) if m == n]].min().item():.2e}..{std[[i for i, m in enumerate(names) if m == n]].max().item():.2e}" for n in dict.fromkeys(names)})
 def timeit(fn, n=5):
     fn(); torch.cuda.synchronize(); t = time.time()

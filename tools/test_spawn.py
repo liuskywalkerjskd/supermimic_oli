@@ -1,4 +1,4 @@
-"""Spawn G1s on Newton/MuJoCo-Warp, report ordering and stepping throughput."""
+"""Spawn robots on Newton/MuJoCo-Warp, report ordering and stepping throughput."""
 
 import argparse
 import os
@@ -24,13 +24,13 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sim import SimulationContext
 from isaaclab.utils import configclass, instantiate, replace
 
-from supermimic.robot import G1_CFG
+from supermimic.robot import ROBOT_CFG
 
 
 @configclass
 class SceneCfg(InteractiveSceneCfg):
     ground = AssetBaseCfg(prim_path="/World/ground", spawn=sim_utils.GroundPlaneCfg())
-    robot = replace(G1_CFG, prim_path="{ENV_REGEX_NS}/Robot")
+    robot = replace(ROBOT_CFG, prim_path="{ENV_REGEX_NS}/Robot")
 
 
 physics = NewtonCfg(

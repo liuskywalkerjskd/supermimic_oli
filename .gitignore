@@ -16,3 +16,14 @@ logs/
 results/analysis/
 # third-party paper
 *.pdf
+
+# Local credentials and environments
+.env
+.env.*
+*.pem
+*.key
+.venv/
+venv/
+swanlog/
+# The selected public Oli demo is intentionally versioned.
+!results/oli_walk1_subject1_full.mp4

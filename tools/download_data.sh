@@ -12,4 +12,4 @@ curl -sfL -o data/g1_description/g1_29dof_rev_1_0.urdf "$HF/resolve/main/robot_d
 for f in $(list robot_description/g1/meshes); do curl -sfL -o "data/g1_description/meshes/$(basename "$f")" "$HF/resolve/main/$f"; done
 echo "motions: $(ls data/lafan1_g1 | wc -l) clips"
 # asset conversion runs inside the container (needs mujoco + the kit-less USD importers)
-docker exec supermimic bash -c "cd /workspace/supermimic && python tools/urdf_to_mjcf.py && python tools/mjcf_to_usd.py"
+docker exec -e SM_ROBOT=g1 supermimic bash -c "cd /workspace/supermimic && python tools/urdf_to_mjcf.py && python tools/mjcf_to_usd.py"

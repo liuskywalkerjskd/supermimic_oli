@@ -1,0 +1,218 @@
+[
+  {
+    "name": "walk1_subject1",
+    "historical_norm_return": 0.8638,
+    "start_frame_50hz": 130,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk4_subject1",
+    "historical_norm_return": 0.8575,
+    "start_frame_50hz": 151,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk1_subject2",
+    "historical_norm_return": 0.8398,
+    "start_frame_50hz": 130,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk2_subject4",
+    "historical_norm_return": 0.8345,
+    "start_frame_50hz": 157,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk3_subject2",
+    "historical_norm_return": 0.8334,
+    "start_frame_50hz": 103,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk3_subject1",
+    "historical_norm_return": 0.8298,
+    "start_frame_50hz": 101,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk2_subject1",
+    "historical_norm_return": 0.8249,
+    "start_frame_50hz": 151,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk2_subject3",
+    "historical_norm_return": 0.8238,
+    "start_frame_50hz": 155,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk3_subject3",
+    "historical_norm_return": 0.8238,
+    "start_frame_50hz": 109,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk3_subject5",
+    "historical_norm_return": 0.8173,
+    "start_frame_50hz": 106,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk3_subject4",
+    "historical_norm_return": 0.7794,
+    "start_frame_50hz": 103,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fight1_subject5",
+    "historical_norm_return": 0.7451,
+    "start_frame_50hz": 129,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance1_subject3",
+    "historical_norm_return": 0.7413,
+    "start_frame_50hz": 175,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance2_subject3",
+    "historical_norm_return": 0.7366,
+    "start_frame_50hz": 393,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fallAndGetUp2_subject3",
+    "historical_norm_return": 0.7322,
+    "start_frame_50hz": 165,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fallAndGetUp3_subject1",
+    "historical_norm_return": 0.7308,
+    "start_frame_50hz": 125,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "jumps1_subject5",
+    "historical_norm_return": 0.7261,
+    "start_frame_50hz": 122,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "jumps1_subject1",
+    "historical_norm_return": 0.721,
+    "start_frame_50hz": 113,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "jumps1_subject2",
+    "historical_norm_return": 0.7204,
+    "start_frame_50hz": 137,
+    "crop_rule": "Initial upper-arm direction changed by 25 degrees for at least 0.3 seconds. The 45-degree threshold is delayed until 13.64 seconds, so use 2.74 seconds to preserve the opening action."
+  },
+  {
+    "name": "fallAndGetUp1_subject1",
+    "historical_norm_return": 0.7171,
+    "start_frame_50hz": 183,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "sprint1_subject2",
+    "historical_norm_return": 0.716,
+    "start_frame_50hz": 129,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "run1_subject2",
+    "historical_norm_return": 0.7112,
+    "start_frame_50hz": 148,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fightAndSports1_subject1",
+    "historical_norm_return": 0.7111,
+    "start_frame_50hz": 168,
+    "crop_rule": "Leg action begins at 3.44s while both arms remain spread until 9-10s. Preserve this real movement."
+  },
+  {
+    "name": "dance2_subject5",
+    "historical_norm_return": 0.7094,
+    "start_frame_50hz": 222,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "run2_subject1",
+    "historical_norm_return": 0.6998,
+    "start_frame_50hz": 141,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "walk1_subject5",
+    "historical_norm_return": 0.6831,
+    "start_frame_50hz": 122,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance1_subject1",
+    "historical_norm_return": 0.6823,
+    "start_frame_50hz": 197,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance2_subject4",
+    "historical_norm_return": 0.6771,
+    "start_frame_50hz": 361,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fallAndGetUp1_subject5",
+    "historical_norm_return": 0.6763,
+    "start_frame_50hz": 175,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fallAndGetUp1_subject4",
+    "historical_norm_return": 0.6751,
+    "start_frame_50hz": 181,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "run2_subject4",
+    "historical_norm_return": 0.6718,
+    "start_frame_50hz": 124,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "fight1_subject3",
+    "historical_norm_return": 0.6708,
+    "start_frame_50hz": 139,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance2_subject1",
+    "historical_norm_return": 0.6614,
+    "start_frame_50hz": 189,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "run1_subject5",
+    "historical_norm_return": 0.6614,
+    "start_frame_50hz": 139,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance2_subject2",
+    "historical_norm_return": 0.657,
+    "start_frame_50hz": 317,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  },
+  {
+    "name": "dance1_subject2",
+    "historical_norm_return": 0.575,
+    "start_frame_50hz": 272,
+    "crop_rule": "Initial arm direction changed by 45 degrees for at least 0.3 seconds."
+  }
+]

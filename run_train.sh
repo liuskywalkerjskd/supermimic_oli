@@ -6,5 +6,5 @@ RUN=${1:-lafan1_main}
 shift || true
 PIN=""
 [ -n "${CPUS:-}" ] && PIN="taskset -c $CPUS"
-docker exec supermimic tmux new-session -d -s "$RUN" \
+docker exec supermimic tmux new-session -d -s "$RUN" -e "SM_ROBOT=${SM_ROBOT:-oli}" \
   "cd /workspace/supermimic && mkdir -p logs/$RUN && $PIN python supermimic/train.py --log_dir logs/$RUN $* 2>&1 | tee -a logs/$RUN/stdout.log"

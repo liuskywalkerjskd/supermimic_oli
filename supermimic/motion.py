@@ -1,4 +1,4 @@
-"""Reference motion library: LAFAN1 G1 retargets resampled to 50 Hz, with FK of tracked bodies."""
+"""Reference motion library: LAFAN1 robot retargets resampled to 50 Hz, with FK of tracked bodies."""
 
 from __future__ import annotations
 
@@ -8,22 +8,25 @@ import os
 import numpy as np
 import torch
 
-from .kinematics import G1Kinematics
+from .kinematics import RobotKinematics
+from .robot import NUM_J
 from .rotations import mat_to_6d, quat_slerp, quat_to_mat, so3_log, yaw_mat
 
 CONTROL_DT = 0.02
+GOAL_FRAME_DIM = 3 + 6 + 3 + 3 + 2 * NUM_J  # per future frame in MotionLib.goal
 BIN_FRAMES = 50  # 1 s bins for return-based reset sampling
 
 
 class MotionLib:
-    def __init__(self, files: list[str], kin: G1Kinematics, device: str, src_fps: float = 30.0):
+    def __init__(self, files: list[str], kin: RobotKinematics, device: str, src_fps: float = 30.0):
         self.device = device
         self.names = [os.path.splitext(os.path.basename(f))[0] for f in files]
         ps, qs, js = [], [], []
         lens = []
         for f in files:
             raw = torch.tensor(np.loadtxt(f, delimiter=","), dtype=torch.float32)
-            p, q_xyzw, j = raw[:, :3], raw[:, 3:7], raw[:, 7:36]
+            assert raw.shape[1] == 7 + NUM_J, f"{f}: {raw.shape[1]} columns, expected {7 + NUM_J}"
+            p, q_xyzw, j = raw[:, :3], raw[:, 3:7], raw[:, 7 : 7 + NUM_J]
             quat = torch.cat((q_xyzw[:, 3:4], q_xyzw[:, :3]), -1)
             # resample to 50 Hz
             T_src = raw.shape[0]
@@ -87,7 +90,7 @@ class MotionLib:
             self.frame_bin[s:e] = b
 
     @staticmethod
-    def from_dir(path: str, kin: G1Kinematics, device: str) -> MotionLib:
+    def from_dir(path: str, kin: RobotKinematics, device: str) -> MotionLib:
         files = sorted(glob.glob(os.path.join(path, "*.csv")))
         return MotionLib(files, kin, device)
 
@@ -106,7 +109,7 @@ class MotionLib:
         rot = mat_to_6d(Ht @ self.root_R[fut])
         feats = torch.cat(
             (dp, rot, self.root_v_local[fut], self.root_w_local[fut], self.q[fut], self.qd[fut] * 0.1), -1
-        )  # (B,K,73)
+        )  # (B,K,GOAL_FRAME_DIM)
         return feats.reshape(f.shape[0], -1)
 
     def ref_state(self, f: torch.Tensor):

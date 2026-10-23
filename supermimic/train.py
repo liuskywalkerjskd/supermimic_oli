@@ -38,7 +38,7 @@ parser.add_argument("--wm_only_iters", type=int, default=500, help="world-model-
 parser.add_argument("--lr_decay_iters", type=int, default=250_000)
 parser.add_argument("--ckpt_every", type=int, default=2000)
 parser.add_argument("--log_every", type=int, default=50)
-parser.add_argument("--motion_dir", type=str, default=os.path.join(REPO, "data", "lafan1_g1"))
+parser.add_argument("--motion_dir", type=str, default=None, help="default: the robot's MOTION_DIR")
 parser.add_argument("--log_dir", type=str, default=os.path.join(REPO, "logs", "run"))
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--resume", type=str, default=None)
@@ -51,12 +51,12 @@ import torch.nn as nn
 
 from supermimic.buffer import ReplayBuffer
 from supermimic.env import TrackingSim, make_sim
-from supermimic.kinematics import G1Kinematics
+from supermimic.kinematics import RobotKinematics
 from supermimic.mdp import CRITIC_EXTRA, INV_DIM, MDP, OBS_DIM, invariant_features, normalize_xi, unflatten_state
-from supermimic.motion import MotionLib
+from supermimic.motion import GOAL_FRAME_DIM, MotionLib
 import supermimic.networks as networks
 from supermimic.networks import Critic, Policy, WorldModel
-from supermimic.robot import default_joint_pos_list
+from supermimic.robot import MOTION_DIR, NUM_J, default_joint_pos_list
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -64,13 +64,14 @@ torch.manual_seed(args.seed)
 networks.AMP_DTYPE = torch.bfloat16 if args.amp == "bf16" else None
 dev = "cuda:0"
 os.makedirs(args.log_dir, exist_ok=True)
+args.motion_dir = args.motion_dir or MOTION_DIR
 json.dump(vars(args), open(os.path.join(args.log_dir, "args.json"), "w"), indent=2)
 
-kin = G1Kinematics(dev)
+kin = RobotKinematics(dev)
 motion = MotionLib.from_dir(args.motion_dir, kin, dev)
 mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
 K, Hh, HZ = args.goal_frames, args.hist, args.horizon
-GOAL_DIM = 73 * K
+GOAL_DIM = GOAL_FRAME_DIM * K
 CRITIC_IN = INV_DIM + CRITIC_EXTRA + GOAL_DIM
 
 wm = WorldModel().to(dev)
@@ -89,7 +90,7 @@ if args.resume:
 
 # per-component floors on the error normalization (pos, rot, lin vel, ang vel, q, qd increments)
 ERR_FLOOR = torch.cat((torch.full((3,), 3e-3), torch.full((3,), 5e-3), torch.full((3,), 2e-2), torch.full((3,), 5e-2),
-                       torch.full((29,), 3e-3), torch.full((29,), 5e-2))).to(dev)  # fmt: skip
+                       torch.full((NUM_J,), 3e-3), torch.full((NUM_J,), 5e-2))).to(dev)  # fmt: skip
 
 
 def _wm_rollout(s, a, xi):

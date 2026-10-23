@@ -19,13 +19,18 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-MJCF = os.path.join(ROOT, "data", "g1_description", "g1_29dof.xml")
+ROBOT = os.environ.get("SM_ROBOT", "oli")
+_CFG = {  # robot -> (MJCF, mesh dir, root body, label)
+    "g1": ("g1_description/g1_29dof.xml", "g1_description", "pelvis", "G1"),
+    "oli": ("oli_description/oli_31dof.xml", "oli_description/meshes", "base_link", "Oli"),
+}[ROBOT]
+MJCF = os.path.join(ROOT, "data", _CFG[0])
 
 
 def two_robot_xml() -> str:
     xml = open(MJCF).read()
-    xml = re.sub(r'meshdir="[^"]*"', 'meshdir="' + os.path.join(ROOT, 'data', 'g1_description') + '/"', xml)
-    body = xml[xml.index('<body name="pelvis"') : xml.index("</worldbody>")]
+    xml = re.sub(r'meshdir="[^"]*"', 'meshdir="' + os.path.join(ROOT, 'data', _CFG[1]) + '/"', xml)
+    body = xml[xml.index(f'<body name="{_CFG[2]}"') : xml.index("</worldbody>")]
     ghost = re.sub(r' name="([^"]+)"', r' name="ref_\1"', body)
     ghost = re.sub(r'rgba="[^"]*"', 'rgba="0.35 0.65 1.0 0.25"', ghost)
     ghost = re.sub(r' (contype|conaffinity|group)="[^"]*"', "", ghost)
@@ -92,21 +97,23 @@ def main():
             f = int(d["f"][tt, c])
             data.qpos[0:3] = d["root_p"][tt, c]
             data.qpos[3:7] = d["root_quat"][tt, c]
-            data.qpos[7:36] = d["q"][tt, c]
-            data.qpos[36:39] = d["ref_root_p"][f]
+            J = d["q"].shape[-1]
+            g0 = 7 + J  # ghost free joint
+            data.qpos[7:g0] = d["q"][tt, c]
+            data.qpos[g0 : g0 + 3] = d["ref_root_p"][f]
             if not a.global_ghost:  # anchor the reference to the robot's xy, as the tracking reward does
-                data.qpos[36:38] = d["root_p"][tt, c][:2]
-            data.qpos[39:43] = _mat_to_quat(d["ref_root_R"][f])
-            data.qpos[43:72] = d["ref_q"][f]
+                data.qpos[g0 : g0 + 2] = d["root_p"][tt, c][:2]
+            data.qpos[g0 + 3 : g0 + 7] = _mat_to_quat(d["ref_root_R"][f])
+            data.qpos[g0 + 7 : g0 + 7 + J] = d["ref_q"][f]
             mujoco.mj_kinematics(model, data)
-            cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.75]
+            cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.75 if ROBOT == "g1" else 0.95]
             renderer.update_scene(data, camera=cam)
             img = Image.fromarray(renderer.render())
             draw = ImageDraw.Draw(img)
             label = f"{a.title}  {clip}  t={(f - int(d['clip_start'][c])) * 0.02:5.1f}s"
             if fell_at is not None:
                 label += "  [terminated]"
-            for xy, txt in (((16, 12), label), ((16, a.height - 38), "solid: simulated G1 policy (Isaac Lab + MuJoCo-Warp)   blue ghost: reference")):
+            for xy, txt in (((16, 12), label), ((16, a.height - 38), f"solid: simulated {_CFG[3]} policy (Isaac Lab + MuJoCo-Warp)   blue ghost: reference")):
                 bb = draw.textbbox(xy, txt, font=font)
                 draw.rectangle((bb[0] - 6, bb[1] - 4, bb[2] + 6, bb[3] + 4), fill=(255, 255, 255))
                 draw.text(xy, txt, fill=(20, 20, 20), font=font)

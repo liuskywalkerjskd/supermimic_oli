@@ -21,11 +21,12 @@ sys.path.insert(0, REPO)
 from isaaclab.app import add_launcher_args, launch_simulation
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--run_dir", type=str, required=True)
+parser.add_argument("--run_dir", type=str, required=True, help="comma-separated for several runs")
+parser.add_argument("--eval_tag", type=str, default="", help="suffix for eval csv/json, e.g. on40 -> eval_on40.csv")
 parser.add_argument("--watch", action="store_true")
 parser.add_argument("--ckpt", type=str, default=None, help="evaluate one checkpoint")
 parser.add_argument("--record", type=str, default=None, help="save trajectories (npz) for rendering")
-parser.add_argument("--motion_dir", type=str, default=os.path.join(REPO, "data", "lafan1_g1"))
+parser.add_argument("--motion_dir", type=str, default=None, help="default: the robot's MOTION_DIR")
 parser.add_argument("--every", type=int, default=1, help="evaluate every n-th checkpoint")
 add_launcher_args(parser)
 args = parser.parse_args()
@@ -35,16 +36,16 @@ import torch
 
 import supermimic.networks as networks
 from supermimic.env import TrackingSim, make_sim
-from supermimic.kinematics import G1Kinematics
+from supermimic.kinematics import RobotKinematics
 from supermimic.mdp import MAX_STEP_REWARD, OBS_DIM, MDP
-from supermimic.motion import MotionLib
+from supermimic.motion import GOAL_FRAME_DIM, MotionLib
 from supermimic.networks import Policy
-from supermimic.robot import default_joint_pos_list
+from supermimic.robot import MOTION_DIR, default_joint_pos_list
 
 torch.backends.cuda.matmul.allow_tf32 = True
 dev = "cuda:0"
-kin = G1Kinematics(dev)
-motion = MotionLib.from_dir(args.motion_dir, kin, dev)
+kin = RobotKinematics(dev)
+motion = MotionLib.from_dir(args.motion_dir or MOTION_DIR, kin, dev)
 mdp = MDP(kin, motion, torch.tensor(default_joint_pos_list(), device=dev))
 C = len(motion.names)
 
@@ -54,7 +55,7 @@ def evaluate(env: TrackingSim, ck: dict, record: str | None = None) -> dict:
     a_ = ck["args"]
     K, Hh = a_["goal_frames"], a_["hist"]
     networks.AMP_DTYPE = torch.bfloat16 if a_.get("amp", "none") == "bf16" else None
-    pi = Policy(OBS_DIM, 73 * K, hist=Hh).to(dev)
+    pi = Policy(OBS_DIM, GOAL_FRAME_DIM * K, hist=Hh).to(dev)
     pi.load_state_dict(ck["pi"])
     pi.eval()
     ids = torch.arange(C, device=dev)
@@ -104,26 +105,32 @@ with launch_simulation(sim_cfg, args):
         res = evaluate(env, ck, args.record)
         print(json.dumps({k: v for k, v in res.items() if k != "per_clip"}, indent=1))
         sys.exit(0)
-    out_csv = os.path.join(args.run_dir, "eval.csv")
-    done = set()
-    if os.path.exists(out_csv):
-        done = {int(l.split(",")[0]) for l in open(out_csv).read().strip().splitlines()[1:]}
-    else:
-        open(out_csv, "w").write("iteration,train_wall_h,saved_at,eval_at,norm_return,norm_return_framew,n_failed,failed\n")
+    run_dirs = args.run_dir.split(",")  # one watcher can serve several runs (same motion set)
+    tag = f"_{args.eval_tag}" if args.eval_tag else ""
+    done = {}
+    for rd in run_dirs:
+        out_csv = os.path.join(rd, f"eval{tag}.csv")
+        done[rd] = set()
+        if os.path.exists(out_csv):
+            done[rd] = {int(l.split(",")[0]) for l in open(out_csv).read().strip().splitlines()[1:]}
+        else:
+            open(out_csv, "w").write("iteration,train_wall_h,saved_at,eval_at,norm_return,norm_return_framew,n_failed,failed\n")
     while True:
-        ckpts = sorted(glob.glob(os.path.join(args.run_dir, "ckpt_*.pt")))
-        todo = [c for c in ckpts if int(os.path.basename(c)[5:11]) not in done]
-        todo = [c for c in todo if (int(os.path.basename(c)[5:11]) // 2000) % args.every == 0]
-        for c in todo:
-            it = int(os.path.basename(c)[5:11])
-            ck = torch.load(c, map_location=dev)
-            t0 = time.time()
-            res = evaluate(env, ck)
-            line = f"{it},{ck['wall_time'] / 3600:.4f},{ck['saved_at']},{time.strftime('%Y-%m-%d %H:%M:%S')},{res['norm_return']:.4f},{res['norm_return_framew']:.4f},{res['n_failed']},{'|'.join(res['failed'])}\n"
-            open(out_csv, "a").write(line)
-            json.dump(res, open(c.replace(".pt", "_eval.json"), "w"), indent=1)
-            print(f"[eval] it {it} ({ck['wall_time'] / 3600:.2f} h): norm return {res['norm_return']:.4f}, failed {res['n_failed']}/{C} ({time.time() - t0:.0f}s)", flush=True)
-            done.add(it)
+        for rd in run_dirs:
+            out_csv = os.path.join(rd, f"eval{tag}.csv")
+            ckpts = sorted(glob.glob(os.path.join(rd, "ckpt_*.pt")))
+            todo = [c for c in ckpts if int(os.path.basename(c)[5:11]) not in done[rd]]
+            todo = [c for c in todo if (int(os.path.basename(c)[5:11]) // 2000) % args.every == 0]
+            for c in todo:
+                it = int(os.path.basename(c)[5:11])
+                ck = torch.load(c, map_location=dev)
+                t0 = time.time()
+                res = evaluate(env, ck)
+                line = f"{it},{ck['wall_time'] / 3600:.4f},{ck['saved_at']},{time.strftime('%Y-%m-%d %H:%M:%S')},{res['norm_return']:.4f},{res['norm_return_framew']:.4f},{res['n_failed']},{'|'.join(res['failed'])}\n"
+                open(out_csv, "a").write(line)
+                json.dump(res, open(c.replace(".pt", f"_eval{tag}.json"), "w"), indent=1)
+                print(f"[eval] {os.path.basename(rd)} it {it} ({ck['wall_time'] / 3600:.2f} h): norm return {res['norm_return']:.4f}, failed {res['n_failed']}/{C} ({time.time() - t0:.0f}s)", flush=True)
+                done[rd].add(it)
         if not args.watch:
             break
         time.sleep(60)
